@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication4.Data;
 using WebApplication4.DTOs;
+using WebApplication4.Exceptions;
+using WebApplication4.Models;
 
 namespace WebApplication4.Repositories;
 
@@ -39,5 +41,22 @@ public class ClientRepository : IClientsRepository
                 }).ToList()
             }).FirstAsync();
         return result;
+    }
+
+    public async Task<bool> HasClientActiveReservations(int requestIdClient)
+    {
+       return await _applicationContext.Reservation.Include(e => e.Client).Where(e => e.IdClient == requestIdClient)
+            .AnyAsync(e => !e.Fulfilled);
+    }
+
+    public async Task<Client> GetClient(int requestIdClient)
+    {
+        var client = await _applicationContext.Client.FindAsync(requestIdClient);
+        if (client is null)
+        {
+            throw new DomainException(404, "Client for given ID " + requestIdClient + "not found ");
+        }
+
+        return client;
     }
 }

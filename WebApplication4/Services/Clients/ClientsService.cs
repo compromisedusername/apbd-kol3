@@ -16,7 +16,7 @@ public class ClientsService : IClientsService
     public async Task<ResponseGetClientRescipesDto> GetClientReservations(int idClient)
     {
         if (await _clientsRepository.ClientDoesExist(idClient)) {
-            throw new DomainException(404, "Client with ID " + idClient + " doesnt exists!");
+            throw new DomainException(404, "Client with ID " + idClient + " doesnt exists!" );
         }
 
         var client = await _clientsRepository.GetClientReservations(idClient);

@@ -1,5 +1,5 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 using WebApplication4.DTOs;
 using WebApplication4.Repositories;
 using WebApplication4.Services.Reservations;
@@ -8,7 +8,7 @@ namespace WebApplication4.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ReservationsController
+public class ReservationsController : ControllerBase
 {
     private IReservationsService _reservationsService;
     private IClientsRepository _clientsRepository;
@@ -18,13 +18,25 @@ public class ReservationsController
     }
     
 
-    [HttpPost]
+    [HttpPost("add")]
     public async Task<IActionResult> AddReservationForClient(RequestCreateReservationForClient reservationForClient)
     {
+        try
+        {
+            var res = new
+            {
+                StatusCode = StatusCodes.Status201Created,
+                IdReservation = await _reservationsService.CreateReservationAsync(reservationForClient)
+            };
+            
+            return Ok(res);
+        }
+        catch (ArgumentException exc)
+        {
+            return BadRequest(new {StatusCode = 400, Message = exc});
+        }
 
-        await _clientsRepository.ClientDoesExist(reservationForClient.IdClient);
-        await _reservationsService.IsDateFromIsLaterThanDue(reservationForClient.DateFrom, reservationForClient.DateTo);
-        await _reservationsService.ClientDoesHaveAlreadyActiveReservation(reservationForClient.IdClient); // Active reservation -- reservation which is nor accepted nor cancelled
+
     }
     
     

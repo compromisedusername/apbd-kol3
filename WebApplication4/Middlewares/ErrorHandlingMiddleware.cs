@@ -1,27 +1,32 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using WebApplication4.Data;
 using WebApplication4.Exceptions;
 
 namespace WebApplication4.Middlewares;
 
-public class ExceptionHandlingMiddleware
+public class ExceptionHandlingMiddleware(
+    RequestDelegate next,
+    ApplicationContext dbContext,
+    Logger<ExceptionHandlingMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly ApplicationContext _dbContext = dbContext;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger = logger;
 
     public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
+        }
+        catch (FailedReservationException ex)
+        {
+            await HandleFailedReservationExceptionAsync(context, ex);
         }
         catch (DomainException ex)
         {
-            await HandleDomainExceptionAsync(context, ex);
+            await HandleDomainException(context, ex);
         }
         catch (Exception ex)
         {
@@ -29,7 +34,27 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    private static Task HandleDomainExceptionAsync(HttpContext context, DomainException ex)
+
+    private static Task HandleDomainException(HttpContext context, DomainException ex)
+    {
+        
+        
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = ex.StatusCode;
+        
+        
+        
+
+        var response = new
+        {
+            message = ex.Message,
+            statusCode = ex.StatusCode
+        };
+
+        return  context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+
+    private static Task HandleFailedReservationExceptionAsync(HttpContext context, FailedReservationException ex)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = ex.StatusCode;
@@ -42,7 +67,7 @@ public class ExceptionHandlingMiddleware
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
-
+    
     private static Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
         context.Response.ContentType = "application/json";
@@ -57,4 +82,6 @@ public class ExceptionHandlingMiddleware
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
+   
+    
 }

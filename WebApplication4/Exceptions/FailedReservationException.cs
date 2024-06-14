@@ -1,13 +1,14 @@
 namespace WebApplication4.Exceptions;
 
-public class DomainException : Exception
+public class FailedReservationException : Exception
 {
     public string Message { get;  set; }
     public int StatusCode { get;  set; } 
     public int ClientId { get; set; }
-    public DomainException(int statusCode, string message): base(message)
+    public FailedReservationException(int statusCode, string message, int clientId): base(message)
     {
         StatusCode = statusCode;
         Message = message;
+        ClientId = clientId;
     }
 }
