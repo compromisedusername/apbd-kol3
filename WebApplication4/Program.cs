@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication4.Data;
+using WebApplication4.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,12 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationContext>(
-    options => options.UseSqlServer("Name=ConnectionStrings:Default")
+    options => options.UseSqlServer("Name=ConnectionStrings:Default") // Added DbContext
 );
-builder.Services.AddControllers();
-
+builder.Services.AddControllers();  // Added Controllers
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>(); // Added Middleware
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -26,5 +28,5 @@ app.UseHttpsRedirection();
 
 
 
-app.MapControllers();
+app.MapControllers(); // Map Controllers
 app.Run();
